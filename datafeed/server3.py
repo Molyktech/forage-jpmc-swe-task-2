@@ -160,7 +160,9 @@ def generate_csv():
 
 def read_csv():
     """ Read a CSV or order history into a list. """
-    with open('test.csv', 'rt') as f:
+    csv_path = os.path.join(os.path.dirname(__file__), '..', 'test.csv')
+    with open(csv_path, 'rt') as f:
+    # with open('test.csv', 'rt') as f:
         for time, stock, side, order, size in csv.reader(f):
             yield dateutil.parser.parse(time), stock, side, float(order), int(size)
 
@@ -260,9 +262,20 @@ class App(object):
         self._book_1 = dict()
         self._book_2 = dict()
         self._data_1 = order_book(read_csv(), self._book_1, 'ABC')
+        print(self._data_1)
         self._data_2 = order_book(read_csv(), self._book_2, 'DEF')
         self._rt_start = datetime.now()
-        self._sim_start, _, _ = next(self._data_1)
+        # self._sim_start, _, _ = next(self._data_1)
+        # self.read_10_first_lines()
+        # using this to debug and ensure _data_1 is an iterator and yields exactly three values
+        try:
+            data_point = next(self._data_1)
+            self._sim_start, _, _ = data_point
+        except StopIteration:
+            raise ValueError("order_book did not yield enough values to unpack")
+        except ValueError:
+            raise ValueError("order_book did not yield a tuple with three values")
+
         self.read_10_first_lines()
 
     @property
